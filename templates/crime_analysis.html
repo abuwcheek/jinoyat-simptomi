@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jinoyatni Tahlil Qilish</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="container mt-5">
+
+    <h2 class="text-center">Jinoyatni Tahlil Qilish</h2>
+
+    <form id="crimeForm">
+        <label for="symptoms">Jinoyat belgilari (vergul bilan ajratib yozing):</label>
+        <input type="text" id="symptoms" class="form-control" placeholder="Masalan: qurol ishlatish, qon izlari">
+        <button type="submit" class="btn btn-primary mt-3">Tahlil qilish</button>
+        <button type="button" id="resetBtn" class="btn btn-secondary mt-3">Qayta boshlash</button>
+    </form>
+
+    <h3 class="mt-4">Natijalar:</h3>
+    <ul id="results" class="list-group"></ul>
+
+    <script>
+        $(document).ready(function() {
+            // Form yuborilganda ishlaydi
+            $("#crimeForm").submit(function(event) {
+                event.preventDefault();  // Form yuborilishini to‘xtatish
+                
+                let symptoms = $("#symptoms").val().split(",").map(s => s.trim());  // Belgilarni massivga aylantirish
+                
+                $.ajax({
+                    url: "/analyze_crime/",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ description: symptoms }),
+                    success: function(response) {
+                        $("#results").empty();  // Natijalar ro‘yxatini tozalash
+                        if (response.possible_crimes.length > 0) {
+                            response.possible_crimes.forEach(crime => {
+                                $("#results").append(`<li class="list-group-item"><strong>${crime.name}</strong> - ${crime.category}<br>${crime.description}</li>`);
+                            });
+                        } else {
+                            $("#results").append(`<li class="list-group-item text-danger">Hech qanday mos jinoyat topilmadi.</li>`);
+                        }
+                    },
+                    error: function() {
+                        $("#results").html('<li class="list-group-item text-danger">Xatolik yuz berdi, qayta urinib ko‘ring!</li>');
+                    }
+                });
+            });
+
+            // "Qayta boshlash" tugmasi bosilganda
+            $("#resetBtn").click(function() {
+                $("#symptoms").val("");  // Inputni tozalash
+                $("#results").empty();   // Natijalarni o‘chirish
+            });
+        });
+    </script>
+
+</body>
+</html>
